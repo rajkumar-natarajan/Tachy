@@ -7,18 +7,7 @@
   --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
 }
 
-/* Dark theme (default) */
-.dark {
-  --bg: 6 13 28; /* #060d1c */
-  --surface: 10 20 40; /* #0A1428 */
-  --elevated: 15 29 56; /* #0f1d38 */
-  --border: 30 47 82;
-  --fg: 226 232 240;
-  --muted: 130 145 170;
-  --accent: 0 240 255;
-}
-
-/* Light theme */
+/* Light theme (defaults) */
 :root,
 .light {
   --bg: 245 247 250;
@@ -28,6 +17,17 @@
   --fg: 15 23 42;
   --muted: 100 116 139;
   --accent: 0 180 200;
+}
+
+/* Dark theme — must come after light so it overrides when .dark is present */
+.dark {
+  --bg: 6 13 28; /* #060d1c */
+  --surface: 10 20 40; /* #0A1428 */
+  --elevated: 15 29 56; /* #0f1d38 */
+  --border: 30 47 82;
+  --fg: 226 232 240;
+  --muted: 130 145 170;
+  --accent: 0 240 255;
 }
 
 * {
