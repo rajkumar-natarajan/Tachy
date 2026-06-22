@@ -1,0 +1,170 @@
+// Tachy — reference Prisma schema for the v2 collaborative backend.
+// Not wired into the MVP (which is fully client-side/offline-first),
+// but documents the intended Postgres data model for teams, real-time
+// sync, mock servers, monitors, and documentation.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceType {
+  PERSONAL
+  TEAM
+  PUBLIC
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum NodeType {
+  FOLDER
+  REQUEST
+}
+
+model User {
+  id        String      @id @default(cuid())
+  email     String      @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime    @default(now())
+  members   Member[]
+  comments  Comment[]
+  history   HistoryEntry[]
+}
+
+model Workspace {
+  id          String        @id @default(cuid())
+  name        String
+  type        WorkspaceType @default(PERSONAL)
+  createdAt   DateTime      @default(now())
+  members     Member[]
+  collections Collection[]
+  environments Environment[]
+  monitors    Monitor[]
+  mockServers MockServer[]
+}
+
+model Member {
+  id          String    @id @default(cuid())
+  role        Role      @default(EDITOR)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+
+  @@unique([userId, workspaceId])
+}
+
+model Collection {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  variables   Json        @default("[]")
+  auth        Json        @default("{}")
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+  nodes       Node[]
+  docs        Documentation?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Node {
+  id           String      @id @default(cuid())
+  name         String
+  type         NodeType
+  order        Int         @default(0)
+  // Request payload (method, url, params, headers, auth, body, scripts) as JSON.
+  request      Json?
+  collection   Collection  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId String
+  parent       Node?       @relation("NodeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId     String?
+  children     Node[]      @relation("NodeChildren")
+  comments     Comment[]
+
+  @@index([collectionId])
+  @@index([parentId])
+}
+
+model Environment {
+  id          String    @id @default(cuid())
+  name        String
+  color       String?
+  variables   Json      @default("[]")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  node      Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  nodeId    String
+  createdAt DateTime @default(now())
+}
+
+model HistoryEntry {
+  id        String   @id @default(cuid())
+  method    String
+  url       String
+  status    Int
+  timeMs    Float
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model MockServer {
+  id          String    @id @default(cuid())
+  name        String
+  // Conditional response rules: matchers + response/delay/random-data config.
+  rules       Json      @default("[]")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+  createdAt   DateTime  @default(now())
+}
+
+model Monitor {
+  id          String    @id @default(cuid())
+  name        String
+  cron        String
+  // Notification config (email/webhook) + target collection id.
+  config      Json      @default("{}")
+  runs        MonitorRun[]
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+}
+
+model MonitorRun {
+  id         String   @id @default(cuid())
+  monitor    Monitor  @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+  monitorId  String
+  passed     Int
+  failed     Int
+  durationMs Float
+  startedAt  DateTime @default(now())
+
+  @@index([monitorId, startedAt])
+}
+
+model Documentation {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  markdown     String     @default("")
+  isPublic     Boolean    @default(false)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId String     @unique
+}
