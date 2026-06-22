@@ -13,6 +13,7 @@ import {
   uid,
 } from "./factory";
 import { seedCollections, seedEnvironments } from "./sample";
+import { buildLocalEnv, buildTestLab, LOCAL_ENV_NAME, TEST_LAB_NAME } from "./testlab";
 import type {
   Collection,
   CollectionNode,
@@ -161,10 +162,20 @@ export const useStore = create<TachyState>()(
 
       setHydrated: () => {
         const s = get();
+        // Ensure the local Test Lab collection + environment exist (idempotent).
+        const hasLab = s.collections.some((c) => c.name === TEST_LAB_NAME);
+        const hasLocalEnv = s.environments.some((e) => e.name === LOCAL_ENV_NAME);
+        const collections = hasLab ? s.collections : [...s.collections, buildTestLab()];
+        const environments = hasLocalEnv
+          ? s.environments
+          : [...s.environments, buildLocalEnv()];
+
         set({
           hydrated: true,
+          collections,
+          environments,
           activeTabId: s.activeTabId ?? s.tabs[0]?.id ?? null,
-          activeEnvId: s.activeEnvId ?? s.environments[0]?.id ?? null,
+          activeEnvId: s.activeEnvId ?? environments[0]?.id ?? null,
         });
       },
 
