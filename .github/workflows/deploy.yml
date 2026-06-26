@@ -14,6 +14,7 @@ concurrency:
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
 jobs:
   deploy:
@@ -22,6 +23,20 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Verify Vercel secrets are configured
+        run: |
+          missing=""
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
+          [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required secret(s):$missing"
+            echo "Add them under Settings → Secrets and variables → Actions."
+            echo "See docs/DEPLOYMENT.md for setup instructions."
+            exit 1
+          fi
+          echo "All Vercel secrets are present."
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -50,15 +65,15 @@ jobs:
           fi
 
       - name: Pull Vercel environment
-        run: vercel pull --yes --environment=${{ steps.env.outputs.target }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=${{ steps.env.outputs.target }} --token="$VERCEL_TOKEN"
 
       - name: Build project
-        run: vercel build ${{ steps.env.outputs.prod_flag }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build ${{ steps.env.outputs.prod_flag }} --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt ${{ steps.env.outputs.prod_flag }} --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prebuilt ${{ steps.env.outputs.prod_flag }} --token="$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed to: $url"
 

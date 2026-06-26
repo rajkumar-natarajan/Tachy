@@ -52,3 +52,17 @@ a pull request to get an isolated preview deployment first.
 npm run build
 npm run start
 ```
+
+## Troubleshooting
+
+**`Error: You defined "--token", but it's missing a value`**
+
+The `VERCEL_TOKEN` secret (or `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`) is not set
+in the repository. The workflow now fails early with a clear message listing the
+missing secret(s). Complete [step 2](#2-add-github-repository-secrets) above and
+re-run the job.
+
+> The deploy workflow cannot run on pull requests opened from forks, because
+> GitHub does not expose secrets to fork-based PRs. Deploys from branches within
+> this repository work as expected.
+
