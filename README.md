@@ -216,6 +216,7 @@ tachy/
 | [docs/MOCK_SERVER.md](docs/MOCK_SERVER.md) | Complete mock API reference + Test Lab guide |
 | [docs/SCRIPTING.md](docs/SCRIPTING.md) | The `pm` sandbox API, assertions, variables, snippets |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Dev setup, conventions, how to add features |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hosting on Vercel via GitHub Actions, required secrets |
 
 ---
 
