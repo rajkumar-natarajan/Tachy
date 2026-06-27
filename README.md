@@ -65,6 +65,14 @@ Pick an environment in the top bar and hit **Send** (or `⌘↵`).
 | `npm run start` | Run the production build |
 | `npm run lint` | Lint with ESLint |
 
+### Deployment
+
+Tachy is hosted on **Vercel** via **GitHub Actions** — pushes to `main` deploy
+to production and pull requests get preview deployments automatically. Server
+routes (`/api/proxy`, `/api/mock`) require a Node runtime, so a static host like
+GitHub Pages is not used. See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for
+the full Vercel setup, build, and deploy guide.
+
 ---
 
 ## Why Tachy
